@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sea-retailer-api
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: sea-retailer-api
+    environment: {{ .Values.global.environment }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: sea-retailer-api
+  template:
+    metadata:
+      labels:
+        app: sea-retailer-api
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.api.env.SPRING_PROFILES_ACTIVE }}
+            - name: POSTGRES_USER
+              value: {{ .Values.api.env.POSTGRES_USER }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sea-retailer-secrets
+                  key: postgres-password
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-postgresql:5432/sea_retailer
+            - name: CH_URL
+              value: jdbc:ch://clickhouse:8123/sea_retailer
+            - name: CH_USER
+              value: {{ .Values.api.env.CH_USER }}
+            - name: OIDC_ISSUER
+              value: http://keycloak:8080/realms/sea-retailer
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5

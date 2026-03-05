@@ -1,0 +1,155 @@
+version: "3.8"
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: sea-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./config/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      CLICKHOUSE_DB: sea_retailer
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    container_name: sea-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: sea_retailer
+      POSTGRES_USER: sea_retailer
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sea_retailer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: sea-keycloak
+    command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./config/keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  api-backend:
+    build:
+      context: ../api-backend
+      dockerfile: Dockerfile
+    container_name: sea-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      POSTGRES_USER: sea_retailer
+      POSTGRES_PASSWORD: changeme
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sea_retailer
+      CH_URL: jdbc:ch://clickhouse:8123/sea_retailer
+      OIDC_ISSUER: http://keycloak:8080/realms/sea-retailer
+
+  web-frontend:
+    build:
+      context: ../web-frontend
+      dockerfile: Dockerfile
+    container_name: sea-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-backend
+
+  # ── Optional: Advanced matching recall services ──
+  # Start with: docker compose --profile matching-advanced up
+
+  opensearch:
+    image: opensearchproject/opensearch:2.17.0
+    container_name: sea-opensearch
+    profiles: ["matching-advanced"]
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.16
+    container_name: sea-milvus-etcd
+    profiles: ["matching-advanced"]
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+    volumes:
+      - milvus-etcd:/etcd
+
+  milvus-minio:
+    image: minio/minio:RELEASE.2024-01-01T16-36-33Z
+    container_name: sea-milvus-minio
+    profiles: ["matching-advanced"]
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - milvus-minio:/minio_data
+    command: minio server /minio_data
+
+  milvus:
+    image: milvusdb/milvus:v2.4.0
+    container_name: sea-milvus
+    profiles: ["matching-advanced"]
+    ports:
+      - "19530:19530"
+    depends_on:
+      - milvus-etcd
+      - milvus-minio
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+    volumes:
+      - milvus-data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9091/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  clickhouse-data:
+  postgres-data:
+  opensearch-data:
+  milvus-etcd:
+  milvus-minio:
+  milvus-data:

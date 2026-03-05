@@ -1,0 +1,91 @@
+aliases:
+  dove:
+    std: "Dove"
+    variants: ["dove", "DOVE", "Dove Beauty", "โดฟ", "dove men", "Dove Men+Care"]
+  nivea:
+    std: "Nivea"
+    variants: ["nivea", "NIVEA", "นีเวีย", "Nivea Men", "NIVEA MEN"]
+  garnier:
+    std: "Garnier"
+    variants: ["garnier", "GARNIER", "การ์นิเอร์", "Garnier Men", "Garnier Micellar"]
+  pantene:
+    std: "Pantene"
+    variants: ["pantene", "PANTENE", "แพนทีน", "Pantene Pro-V"]
+  sunsilk:
+    std: "Sunsilk"
+    variants: ["sunsilk", "SUNSILK", "ซันซิล", "Sunsilk Natural"]
+  head_shoulders:
+    std: "Head & Shoulders"
+    variants: ["head & shoulders", "head and shoulders", "H&S", "เฮดแอนด์โชว์เดอร์", "Head&Shoulders"]
+  lux:
+    std: "Lux"
+    variants: ["lux", "LUX", "ลักซ์", "Lux Botanicals"]
+  lifebuoy:
+    std: "Lifebuoy"
+    variants: ["lifebuoy", "LIFEBUOY", "ไลฟ์บอย"]
+  ponds:
+    std: "Pond's"
+    variants: ["pond's", "ponds", "POND'S", "พอนด์ส", "Ponds", "PONDS"]
+  olay:
+    std: "Olay"
+    variants: ["olay", "OLAY", "โอเลย์", "Olay Total Effects"]
+  cetaphil:
+    std: "Cetaphil"
+    variants: ["cetaphil", "CETAPHIL", "เซตาฟิล"]
+  bioderma:
+    std: "Bioderma"
+    variants: ["bioderma", "BIODERMA", "ไบโอเดอร์มา"]
+  vaseline:
+    std: "Vaseline"
+    variants: ["vaseline", "VASELINE", "วาสลีน", "Vaseline Healthy"]
+  johnsons:
+    std: "Johnson's"
+    variants: ["johnson's", "johnsons", "johnson", "จอห์นสัน", "Johnson's Baby", "JOHNSON'S"]
+  palmolive:
+    std: "Palmolive"
+    variants: ["palmolive", "PALMOLIVE", "ปาล์มโอลีฟ", "Palmolive Naturals"]
+  clear:
+    std: "Clear"
+    variants: ["clear", "CLEAR", "เคลียร์", "Clear Men"]
+  tresemme:
+    std: "TRESemmé"
+    variants: ["tresemme", "tresemmé", "TRESEMME", "เทรซาเม่", "TRESemme"]
+  loreal:
+    std: "L'Oréal"
+    variants: ["loreal", "l'oreal", "l'oréal", "L'OREAL", "ลอรีอัล", "L'Oreal Paris", "Loreal"]
+  biore:
+    std: "Bioré"
+    variants: ["biore", "bioré", "BIORE", "บิโอเร", "Biore UV"]
+  senka:
+    std: "Senka"
+    variants: ["senka", "SENKA", "เซนกะ", "Senka Perfect"]
+  eucerin:
+    std: "Eucerin"
+    variants: ["eucerin", "EUCERIN", "ยูเซอริน"]
+  neutrogena:
+    std: "Neutrogena"
+    variants: ["neutrogena", "NEUTROGENA", "นูโทรจีนา"]
+  innisfree:
+    std: "Innisfree"
+    variants: ["innisfree", "INNISFREE", "อินนิสฟรี"]
+  missha:
+    std: "Missha"
+    variants: ["missha", "MISSHA", "มิชชา"]
+  skinceuticals:
+    std: "SkinCeuticals"
+    variants: ["skinceuticals", "SKINCEUTICALS", "สกินซูติคอลส์"]
+  cerave:
+    std: "CeraVe"
+    variants: ["cerave", "CERAVE", "เซราวี"]
+  aveeno:
+    std: "Aveeno"
+    variants: ["aveeno", "AVEENO", "อาวีโน่"]
+  clean_clear:
+    std: "Clean & Clear"
+    variants: ["clean & clear", "clean and clear", "CLEAN & CLEAR", "คลีนแอนด์เคลียร์"]
+  himalaya:
+    std: "Himalaya"
+    variants: ["himalaya", "HIMALAYA", "หิมาลายา", "Himalaya Herbals"]
+  dettol:
+    std: "Dettol"
+    variants: ["dettol", "DETTOL", "เดทตอล"]

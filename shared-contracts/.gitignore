@@ -1,0 +1,15 @@
+# Generated files
+generated/python/**/*.pyc
+generated/python/__pycache__/
+generated/typescript/dist/
+generated/typescript/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~

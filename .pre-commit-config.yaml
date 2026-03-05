@@ -1,0 +1,49 @@
+# =============================================================================
+# SEA Retailer Project — Pre-commit Hooks
+# Prevents secrets and common issues from being committed
+#
+# Setup:
+#   pip install pre-commit
+#   pre-commit install
+#   pre-commit run --all-files   # first-time scan
+# =============================================================================
+
+repos:
+  # ---------------------------------------------------------------------------
+  # General code quality hooks
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
+      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-symlinks
+
+  # ---------------------------------------------------------------------------
+  # Secret detection — catches hardcoded passwords, tokens, API keys
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - "--baseline"
+          - ".secrets.baseline"
+        exclude: |
+          (?x)^(
+            .*\.lock|
+            .*package-lock\.json|
+            .*\.tfvars\.example|
+            .*\.duckdb
+          )$

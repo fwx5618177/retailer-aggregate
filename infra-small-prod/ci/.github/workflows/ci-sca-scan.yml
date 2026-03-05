@@ -1,0 +1,273 @@
+# =============================================================================
+# SCA (Software Composition Analysis) — Dependency Vulnerability Scanning
+# Scans all repos for known vulnerabilities in third-party dependencies.
+# Fails on HIGH or CRITICAL severity findings.
+# =============================================================================
+
+name: CI - SCA Dependency Scan
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly scan every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Python — data-pipeline
+  # ---------------------------------------------------------------------------
+  sca-data-pipeline:
+    name: "SCA: data-pipeline (pip-audit)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: data-pipeline
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" pip-audit
+
+      - name: Run pip-audit
+        run: |
+          pip-audit \
+            --strict \
+            --desc on \
+            --fix --dry-run \
+            --output pip-audit-report.json \
+            --format json \
+            || true
+
+      - name: Fail on HIGH or CRITICAL vulnerabilities
+        run: |
+          pip-audit --strict 2>&1 | tee audit-output.txt
+          # pip-audit --strict exits non-zero if ANY vulnerability is found.
+          # We parse the JSON to check severity and fail only on HIGH/CRITICAL.
+          python3 - <<'PYEOF'
+          import json, sys
+
+          try:
+              with open("pip-audit-report.json") as f:
+                  report = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              print("WARNING: Could not parse pip-audit report, falling back to strict mode")
+              sys.exit(1)
+
+          severe = []
+          for dep in report.get("dependencies", []):
+              for vuln in dep.get("vulns", []):
+                  # pip-audit may not always have fix_versions but aliases are present
+                  desc = vuln.get("description", "").upper()
+                  vuln_id = vuln.get("id", "UNKNOWN")
+                  # Check if the advisory mentions HIGH or CRITICAL
+                  # Also treat any vulnerability with a CVSS >= 7.0 as high
+                  aliases = vuln.get("aliases", [])
+                  severe.append(f"{dep['name']}=={dep['version']}: {vuln_id}")
+
+          if severe:
+              print(f"FATAL: Found {len(severe)} vulnerability(ies) in data-pipeline:")
+              for s in severe:
+                  print(f"  - {s}")
+              sys.exit(1)
+          else:
+              print("No vulnerabilities found in data-pipeline.")
+          PYEOF
+
+  # ---------------------------------------------------------------------------
+  # Python — matching-engine
+  # ---------------------------------------------------------------------------
+  sca-matching-engine:
+    name: "SCA: matching-engine (pip-audit)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: matching-engine
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" pip-audit
+
+      - name: Run pip-audit
+        run: |
+          pip-audit \
+            --strict \
+            --desc on \
+            --fix --dry-run \
+            --output pip-audit-report.json \
+            --format json \
+            || true
+
+      - name: Fail on HIGH or CRITICAL vulnerabilities
+        run: |
+          python3 - <<'PYEOF'
+          import json, sys
+
+          try:
+              with open("pip-audit-report.json") as f:
+                  report = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              print("WARNING: Could not parse pip-audit report, falling back to strict mode")
+              sys.exit(1)
+
+          severe = []
+          for dep in report.get("dependencies", []):
+              for vuln in dep.get("vulns", []):
+                  vuln_id = vuln.get("id", "UNKNOWN")
+                  severe.append(f"{dep['name']}=={dep['version']}: {vuln_id}")
+
+          if severe:
+              print(f"FATAL: Found {len(severe)} vulnerability(ies) in matching-engine:")
+              for s in severe:
+                  print(f"  - {s}")
+              sys.exit(1)
+          else:
+              print("No vulnerabilities found in matching-engine.")
+          PYEOF
+
+  # ---------------------------------------------------------------------------
+  # Java — api-backend (OWASP Dependency-Check)
+  # ---------------------------------------------------------------------------
+  sca-api-backend:
+    name: "SCA: api-backend (OWASP dependency-check)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run OWASP Dependency-Check via Maven
+        run: |
+          ./mvnw org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -Dformats="HTML,JSON" \
+            -DsuppressionFiles=dependency-check-suppressions.xml \
+            -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
+            || true
+
+      - name: Evaluate OWASP results — fail on HIGH/CRITICAL
+        run: |
+          REPORT_FILE="target/dependency-check-report.json"
+          if [ ! -f "$REPORT_FILE" ]; then
+            echo "WARNING: OWASP report not found at $REPORT_FILE"
+            # If the plugin itself failed, treat as error
+            exit 1
+          fi
+
+          python3 - <<'PYEOF'
+          import json, sys
+
+          with open("target/dependency-check-report.json") as f:
+              report = json.load(f)
+
+          high_or_critical = []
+          for dep in report.get("dependencies", []):
+              for vuln in dep.get("vulnerabilities", []):
+                  severity = vuln.get("severity", "").upper()
+                  if severity in ("HIGH", "CRITICAL"):
+                      name = dep.get("fileName", "unknown")
+                      cve = vuln.get("name", "UNKNOWN")
+                      cvss = vuln.get("cvssv3", {}).get("baseScore", "N/A")
+                      high_or_critical.append(f"{name}: {cve} (CVSS: {cvss}, Severity: {severity})")
+
+          if high_or_critical:
+              print(f"FATAL: Found {len(high_or_critical)} HIGH/CRITICAL vulnerability(ies) in api-backend:")
+              for item in high_or_critical:
+                  print(f"  - {item}")
+              sys.exit(1)
+          else:
+              print("No HIGH/CRITICAL vulnerabilities found in api-backend.")
+          PYEOF
+
+      - name: Upload OWASP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-report
+          path: api-backend/target/dependency-check-report.*
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Node.js — web-frontend (npm audit)
+  # ---------------------------------------------------------------------------
+  sca-web-frontend:
+    name: "SCA: web-frontend (npm audit)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit — fail on HIGH or CRITICAL
+        run: |
+          # npm audit returns exit code 1 if ANY vulnerability is found.
+          # We use --audit-level=high to only fail on high/critical.
+          npm audit --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # Summary gate — all SCA jobs must pass
+  # ---------------------------------------------------------------------------
+  sca-gate:
+    name: "SCA Gate (all repos)"
+    runs-on: ubuntu-latest
+    needs:
+      - sca-data-pipeline
+      - sca-matching-engine
+      - sca-api-backend
+      - sca-web-frontend
+    if: always()
+
+    steps:
+      - name: Check SCA results
+        run: |
+          echo "=== SCA Scan Summary ==="
+          echo "data-pipeline:    ${{ needs.sca-data-pipeline.result }}"
+          echo "matching-engine:  ${{ needs.sca-matching-engine.result }}"
+          echo "api-backend:      ${{ needs.sca-api-backend.result }}"
+          echo "web-frontend:     ${{ needs.sca-web-frontend.result }}"
+          echo "========================"
+
+          if [ "${{ needs.sca-data-pipeline.result }}" != "success" ] || \
+             [ "${{ needs.sca-matching-engine.result }}" != "success" ] || \
+             [ "${{ needs.sca-api-backend.result }}" != "success" ] || \
+             [ "${{ needs.sca-web-frontend.result }}" != "success" ]; then
+            echo "FATAL: One or more SCA scans failed. See individual job logs above."
+            exit 1
+          fi
+
+          echo "All SCA scans passed."

@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "title": "SEA Retailer - Pipeline Metrics",
+    "uid": "sea-pipeline",
+    "panels": [
+      {
+        "title": "Pipeline Run Status",
+        "type": "stat",
+        "targets": [{"expr": "sea_pipeline_last_run_success"}]
+      },
+      {
+        "title": "Ingestion Success Rate",
+        "type": "gauge",
+        "targets": [{"expr": "rate(sea_pipeline_ingestion_success_total[1h]) / rate(sea_pipeline_ingestion_total[1h])"}]
+      },
+      {
+        "title": "Items Ingested",
+        "type": "timeseries",
+        "targets": [{"expr": "sea_pipeline_items_ingested_total", "legendFormat": "{{platform}}"}]
+      },
+      {
+        "title": "DQ Check Results",
+        "type": "table",
+        "targets": [{"expr": "sea_pipeline_dq_check_result"}]
+      },
+      {
+        "title": "Field Missing Rate",
+        "type": "bargauge",
+        "targets": [{"expr": "sea_pipeline_field_missing_rate", "legendFormat": "{{field}}"}]
+      },
+      {
+        "title": "Pipeline Duration",
+        "type": "timeseries",
+        "targets": [{"expr": "sea_pipeline_run_duration_seconds"}]
+      }
+    ]
+  }
+}

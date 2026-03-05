@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/top_items.json",
+  "title": "TopItem",
+  "description": "A top-selling item from an e-commerce platform",
+  "type": "object",
+  "required": ["event_date", "platform", "item_id", "title", "category", "rank"],
+  "properties": {
+    "event_date": { "type": "string", "format": "date", "description": "Business date of the ranking snapshot" },
+    "platform": { "$ref": "enums.json#/$defs/Platform" },
+    "item_id": { "type": "string", "description": "Platform-specific item identifier" },
+    "title": { "type": "string", "description": "Original product title from the platform" },
+    "category": { "type": "string", "description": "Product category (standardized)" },
+    "rank": { "type": "integer", "minimum": 1, "description": "Rank position in the top-selling list" },
+    "url": { "type": "string", "format": "uri", "description": "Product page URL" },
+    "brand_raw": { "type": ["string", "null"], "description": "Brand as extracted from the platform" },
+    "brand_std": { "type": ["string", "null"], "description": "Standardized brand name" },
+    "size_value": { "type": ["number", "null"], "description": "Parsed spec size value" },
+    "size_unit": { "type": ["string", "null"], "description": "Spec size unit (ml, g, pcs, etc.)" },
+    "pack_count": { "type": ["integer", "null"], "minimum": 1, "description": "Number of items in a pack/bundle" },
+    "image_url": { "type": ["string", "null"], "format": "uri", "description": "Product image URL" },
+    "ingested_at": { "type": "string", "format": "date-time", "description": "Timestamp when data was ingested" },
+    "source_url": { "type": ["string", "null"], "description": "Source URL or API endpoint used for ingestion" },
+    "source_type": { "type": "string", "enum": ["api", "scrape", "stub"], "description": "How the data was obtained" },
+    "batch_id": { "type": "string", "description": "Pipeline run batch identifier" },
+    "schema_version": { "type": "string", "description": "Schema version for forward compatibility" }
+  }
+}

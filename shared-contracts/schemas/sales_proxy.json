@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/sales_proxy.json",
+  "title": "SalesProxy",
+  "description": "Sales/popularity proxy metric for a platform item",
+  "type": "object",
+  "required": ["event_date", "platform", "item_id", "proxy_type", "proxy_value"],
+  "properties": {
+    "event_date": { "type": "string", "format": "date" },
+    "platform": { "$ref": "enums.json#/$defs/Platform" },
+    "item_id": { "type": "string" },
+    "proxy_type": { "$ref": "enums.json#/$defs/ProxyType" },
+    "proxy_value": { "type": "string", "description": "Proxy value as string (supports ranges like '1K-5K', exact numbers, etc.)" },
+    "proxy_numeric": { "type": ["number", "null"], "description": "Parsed numeric proxy value when available" },
+    "ingested_at": { "type": "string", "format": "date-time" },
+    "batch_id": { "type": "string" },
+    "schema_version": { "type": "string" }
+  }
+}

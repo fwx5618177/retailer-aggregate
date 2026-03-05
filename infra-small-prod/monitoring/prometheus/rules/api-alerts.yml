@@ -1,0 +1,29 @@
+groups:
+  - name: sea-retailer-api
+    rules:
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application="sea-retailer-api"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "API P95 latency above 1s"
+          description: "Endpoint {{ $labels.uri }} P95 latency is {{ $value }}s."
+
+      - alert: APIHighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API error rate above 5%"
+          description: "{{ $labels.uri }} error rate is {{ $value | humanizePercentage }}."
+
+      - alert: APIDown
+        expr: up{job="sea-retailer-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API backend is down"
+          description: "sea-retailer-api has been unreachable for 2 minutes."

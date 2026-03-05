@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sea-retailer-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sea_retailer
+    username: ${POSTGRES_USER:sea_retailer}
+    password: ${POSTGRES_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/sea-retailer}
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+clickhouse:
+  url: ${CH_URL:jdbc:ch://localhost:8123/sea_retailer}
+  username: ${CH_USER:default}
+  password: ${CH_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+app:
+  api-version: "1.0.0"
+  default-window-days: 14
+  default-top-n: 200
+  default-page-size: 20
+  max-page-size: 100
+
+logging:
+  level:
+    com.searetailer: DEBUG
+    org.springframework.security: INFO

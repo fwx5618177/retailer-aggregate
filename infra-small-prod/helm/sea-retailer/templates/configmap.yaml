@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sea-retailer-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  default.yaml: |
+    pipeline:
+      schema_version: "1.0.0"
+    scope:
+      platforms: [shopee, tiktok]
+      categories: [personal_care]
+      sites: [th]
+      top_n: 200
+      window_days: 14
+    storage:
+      mode: prod
+    matching:
+      rule_version: "1.0.0"
+    thresholds:
+      auto_accept: 0.85
+      needs_review: 0.65

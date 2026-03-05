@@ -1,0 +1,74 @@
+{
+  "realm": "sea-retailer",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "viewer", "description": "Read-only access to dashboards and data" },
+      { "name": "reviewer", "description": "Can review matches and submit decisions" },
+      { "name": "admin", "description": "Full administrative access" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "sea-retailer-api",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    },
+    {
+      "clientId": "sea-retailer-web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:5173"
+      ],
+      "defaultClientScopes": ["openid", "profile", "email"]
+    }
+  ],
+  "users": [
+    {
+      "username": "viewer",
+      "enabled": true,
+      "email": "viewer@sea-retailer.local",
+      "firstName": "View",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "viewer123", "temporary": false }
+      ],
+      "realmRoles": ["viewer"]
+    },
+    {
+      "username": "reviewer",
+      "enabled": true,
+      "email": "reviewer@sea-retailer.local",
+      "firstName": "Review",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "reviewer123", "temporary": false }
+      ],
+      "realmRoles": ["reviewer"]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@sea-retailer.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "admin123", "temporary": false }
+      ],
+      "realmRoles": ["admin"]
+    }
+  ]
+}

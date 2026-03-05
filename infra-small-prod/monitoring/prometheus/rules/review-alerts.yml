@@ -1,0 +1,20 @@
+groups:
+  - name: sea-retailer-review
+    rules:
+      - alert: ReviewBacklogHigh
+        expr: sea_retailer_review_queue_size > 200
+        for: 1h
+        labels:
+          severity: medium
+        annotations:
+          summary: "Review queue backlog exceeds 200"
+          description: "{{ $value }} items pending review. Consider raising auto-accept threshold or adding reviewers."
+
+      - alert: ReviewStalePairs
+        expr: sea_retailer_review_oldest_pending_hours > 48
+        for: 30m
+        labels:
+          severity: high
+        annotations:
+          summary: "Review pairs stale for >48h"
+          description: "Oldest pending review is {{ $value }} hours old."

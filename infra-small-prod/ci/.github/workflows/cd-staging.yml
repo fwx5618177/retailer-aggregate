@@ -1,0 +1,36 @@
+name: CD - Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push images
+        run: |
+          echo "Building and pushing Docker images..."
+          # docker build & push for each service
+          # In practice, use GHCR or ECR
+
+      - name: Deploy to staging
+        run: |
+          helm upgrade --install sea-retailer \
+            infra-small-prod/helm/sea-retailer \
+            -f infra-small-prod/helm/sea-retailer/values.yaml \
+            --namespace sea-retailer-staging \
+            --set api.image.tag=${{ github.sha }} \
+            --set frontend.image.tag=${{ github.sha }} \
+            --set pipeline.image.tag=${{ github.sha }} \
+            --set matching.image.tag=${{ github.sha }} \
+            --wait --timeout 300s
+
+      - name: Smoke test
+        run: |
+          echo "Running smoke tests against staging..."
+          # curl health endpoint, basic API checks

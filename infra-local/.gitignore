@@ -1,0 +1,21 @@
+# Docker volumes
+volumes/
+data/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Secrets
+*.pem
+*.key

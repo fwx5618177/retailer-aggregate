@@ -1,0 +1,710 @@
+openapi: 3.1.0
+info:
+  title: SEA Retailer Top Selling Intelligence API
+  version: 1.0.0
+  description: |
+    API for the SEA Retailer Top Selling Intelligence platform.
+    Provides cross-platform top-selling item analysis, matching, alerts, and review workflows.
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+  - url: https://api.sea-retailer.com/api/v1
+    description: Production
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OIDC/JWT Bearer token
+
+  parameters:
+    PlatformParam:
+      name: platform
+      in: query
+      schema:
+        type: string
+        enum: [tiktok, shopee]
+    CategoryParam:
+      name: category
+      in: query
+      schema:
+        type: string
+        default: personal_care
+    EventDateParam:
+      name: event_date
+      in: query
+      schema:
+        type: string
+        format: date
+    WindowParam:
+      name: window
+      in: query
+      schema:
+        type: string
+        enum: ["7d", "14d", "30d"]
+        default: "14d"
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    OffsetParam:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  schemas:
+    Platform:
+      type: string
+      enum: [tiktok, shopee]
+
+    MatchType:
+      type: string
+      enum: [exact_same, variant_family, similar, no_match]
+
+    MatchStatus:
+      type: string
+      enum: [auto_accepted, needs_review, no_match, overridden]
+
+    OurStatus:
+      type: string
+      enum: [covered, not_covered, harvestable, not_recommended]
+
+    AlertType:
+      type: string
+      enum: [rank_jump, proxy_spike, platform_gap, price_anomaly]
+
+    Severity:
+      type: string
+      enum: [critical, high, medium, low]
+
+    AlertStatus:
+      type: string
+      enum: [open, acknowledged, resolved, dismissed]
+
+    ProxyType:
+      type: string
+      enum: [rank, sold, sold_range, review_count, likes, comments, rating]
+
+    MatchReasons:
+      type: object
+      properties:
+        strong_evidence:
+          type: array
+          items:
+            type: string
+        weak_evidence:
+          type: array
+          items:
+            type: string
+        field_alignment:
+          type: object
+          properties:
+            brand_match:
+              type: boolean
+            brand_a:
+              type: string
+            brand_b:
+              type: string
+            spec_match:
+              type: boolean
+            spec_a:
+              type: string
+            spec_b:
+              type: string
+            title_similarity:
+              type: number
+            price_band_match:
+              type: boolean
+        missing_fields:
+          type: array
+          items:
+            type: string
+
+    TopItem:
+      type: object
+      required: [event_date, platform, item_id, title, category, rank]
+      properties:
+        event_date:
+          type: string
+          format: date
+        platform:
+          $ref: "#/components/schemas/Platform"
+        item_id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        rank:
+          type: integer
+        url:
+          type: string
+        brand_raw:
+          type: string
+        brand_std:
+          type: string
+        size_value:
+          type: number
+        size_unit:
+          type: string
+        pack_count:
+          type: integer
+        image_url:
+          type: string
+        list_price:
+          type: integer
+          description: Price in smallest currency unit
+        promo_price:
+          type: integer
+        currency:
+          type: string
+        review_count:
+          type: integer
+        sold_range:
+          type: string
+        source_type:
+          type: string
+          enum: [api, scrape, stub]
+
+    TopItemDetail:
+      allOf:
+        - $ref: "#/components/schemas/TopItem"
+        - type: object
+          properties:
+            price_history:
+              type: array
+              items:
+                type: object
+                properties:
+                  event_date:
+                    type: string
+                    format: date
+                  list_price:
+                    type: integer
+                  promo_price:
+                    type: integer
+            proxy_history:
+              type: array
+              items:
+                type: object
+                properties:
+                  event_date:
+                    type: string
+                    format: date
+                  proxy_type:
+                    type: string
+                  proxy_value:
+                    type: string
+            matches:
+              type: array
+              items:
+                $ref: "#/components/schemas/MatchResult"
+
+    MatchResult:
+      type: object
+      properties:
+        tiktok_item_id:
+          type: string
+        shopee_item_id:
+          type: string
+        tiktok_title:
+          type: string
+        shopee_title:
+          type: string
+        match_type:
+          $ref: "#/components/schemas/MatchType"
+        confidence:
+          type: number
+        status:
+          $ref: "#/components/schemas/MatchStatus"
+        reasons:
+          $ref: "#/components/schemas/MatchReasons"
+        rule_version:
+          type: string
+
+    Alert:
+      type: object
+      properties:
+        alert_id:
+          type: string
+        event_date:
+          type: string
+          format: date
+        platform:
+          $ref: "#/components/schemas/Platform"
+        item_ids:
+          type: array
+          items:
+            type: string
+        alert_type:
+          $ref: "#/components/schemas/AlertType"
+        severity:
+          $ref: "#/components/schemas/Severity"
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+        title:
+          type: string
+        description:
+          type: string
+        reasons:
+          type: object
+        suggested_action:
+          type: string
+
+    ReviewQueueItem:
+      type: object
+      properties:
+        tiktok_item_id:
+          type: string
+        shopee_item_id:
+          type: string
+        tiktok_item:
+          $ref: "#/components/schemas/TopItem"
+        shopee_item:
+          $ref: "#/components/schemas/TopItem"
+        match_type:
+          $ref: "#/components/schemas/MatchType"
+        confidence:
+          type: number
+        reasons:
+          $ref: "#/components/schemas/MatchReasons"
+        rule_version:
+          type: string
+
+    ReviewDecisionRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [accept, reject, change_type]
+        new_match_type:
+          $ref: "#/components/schemas/MatchType"
+          description: Required when decision is change_type
+        comment:
+          type: string
+
+    OurMappingRequest:
+      type: object
+      required: [our_status]
+      properties:
+        our_status:
+          $ref: "#/components/schemas/OurStatus"
+        our_sku_id:
+          type: string
+        notes:
+          type: string
+
+    OverviewResponse:
+      type: object
+      properties:
+        event_date:
+          type: string
+          format: date
+        window:
+          type: string
+        top_n:
+          type: integer
+        category:
+          type: string
+        platforms:
+          type: array
+          items:
+            type: string
+        total_items:
+          type: object
+          properties:
+            tiktok:
+              type: integer
+            shopee:
+              type: integer
+        overlap:
+          type: object
+          properties:
+            exact_same:
+              type: integer
+            variant_family:
+              type: integer
+            similar:
+              type: integer
+            total_matched:
+              type: integer
+        match_rate:
+          type: number
+          description: Percentage of items with a match
+        needs_review_count:
+          type: integer
+        price_band_distribution:
+          type: array
+          items:
+            type: object
+            properties:
+              band:
+                type: string
+              tiktok_count:
+                type: integer
+              shopee_count:
+                type: integer
+        top_brands:
+          type: array
+          items:
+            type: object
+            properties:
+              brand:
+                type: string
+              tiktok_count:
+                type: integer
+              shopee_count:
+                type: integer
+        alerts_summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            by_severity:
+              type: object
+              additionalProperties:
+                type: integer
+            by_type:
+              type: object
+              additionalProperties:
+                type: integer
+        metadata:
+          type: object
+          properties:
+            schema_version:
+              type: string
+            rule_version:
+              type: string
+            batch_id:
+              type: string
+            dq_status:
+              type: string
+
+    PagedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {}
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+paths:
+  /overview:
+    get:
+      operationId: getOverview
+      summary: Get overview dashboard data
+      description: Returns aggregated KPIs, overlap statistics, price band distribution, and alerts summary.
+      tags: [Overview]
+      x-roles: [viewer, reviewer, admin]
+      parameters:
+        - $ref: "#/components/parameters/CategoryParam"
+        - $ref: "#/components/parameters/EventDateParam"
+        - $ref: "#/components/parameters/WindowParam"
+      responses:
+        "200":
+          description: Overview data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverviewResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /top-items:
+    get:
+      operationId: getTopItems
+      summary: List top-selling items
+      description: Returns paginated list of top-selling items with optional filters.
+      tags: [Top Items]
+      x-roles: [viewer, reviewer, admin]
+      parameters:
+        - $ref: "#/components/parameters/PlatformParam"
+        - $ref: "#/components/parameters/CategoryParam"
+        - $ref: "#/components/parameters/EventDateParam"
+        - $ref: "#/components/parameters/WindowParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - name: brand
+          in: query
+          schema:
+            type: string
+        - name: price_min
+          in: query
+          schema:
+            type: integer
+        - name: price_max
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [rank, price_asc, price_desc, title]
+            default: rank
+        - name: match_status
+          in: query
+          schema:
+            $ref: "#/components/schemas/MatchStatus"
+      responses:
+        "200":
+          description: Paginated top items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TopItem"
+
+  /items/{platform}/{item_id}:
+    get:
+      operationId: getItemDetail
+      summary: Get item detail with history and matches
+      tags: [Top Items]
+      x-roles: [viewer, reviewer, admin]
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Platform"
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopItemDetail"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /alerts:
+    get:
+      operationId: getAlerts
+      summary: List alerts and opportunities
+      tags: [Alerts]
+      x-roles: [viewer, reviewer, admin]
+      parameters:
+        - $ref: "#/components/parameters/CategoryParam"
+        - $ref: "#/components/parameters/EventDateParam"
+        - name: alert_type
+          in: query
+          schema:
+            $ref: "#/components/schemas/AlertType"
+        - name: severity
+          in: query
+          schema:
+            $ref: "#/components/schemas/Severity"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/AlertStatus"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Paginated alerts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Alert"
+
+  /review-queue:
+    get:
+      operationId: getReviewQueue
+      summary: List items pending human review
+      tags: [Review]
+      x-roles: [reviewer, admin]
+      parameters:
+        - $ref: "#/components/parameters/CategoryParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [confidence_asc, confidence_desc, date_desc]
+            default: confidence_desc
+      responses:
+        "200":
+          description: Paginated review queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ReviewQueueItem"
+
+  /review/{tiktok_item_id}/{shopee_item_id}/decision:
+    post:
+      operationId: submitReviewDecision
+      summary: Submit a review decision for a matching pair
+      tags: [Review]
+      x-roles: [reviewer, admin]
+      parameters:
+        - name: tiktok_item_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: shopee_item_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          description: Unique key to prevent duplicate submissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewDecisionRequest"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  decision_id:
+                    type: string
+                  status:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Duplicate submission (idempotency key conflict)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /our-mapping/{platform}/{item_id}:
+    get:
+      operationId: getOurMapping
+      summary: Get our mapping for an item
+      tags: [Our Mapping]
+      x-roles: [viewer, reviewer, admin]
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Platform"
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Our mapping
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OurMappingRequest"
+        "404":
+          description: Not found
+    post:
+      operationId: updateOurMapping
+      summary: Update our mapping for an item
+      tags: [Our Mapping]
+      x-roles: [reviewer, admin]
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Platform"
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OurMappingRequest"
+      responses:
+        "200":
+          description: Mapping updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string

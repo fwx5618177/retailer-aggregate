@@ -1,0 +1,38 @@
+name: CI - Web Frontend
+
+on:
+  push:
+    paths: ["web-frontend/**"]
+  pull_request:
+    paths: ["web-frontend/**"]
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Build
+        run: npm run build
+
+      - name: Build Docker image
+        run: docker build -t sea-retailer/web-frontend:${{ github.sha }} .

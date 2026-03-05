@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/enums.json",
+  "title": "SEA Retailer Enums",
+  "description": "All shared enumerations across the SEA Retailer Top Selling Intelligence platform",
+  "$defs": {
+    "Platform": {
+      "type": "string",
+      "enum": ["tiktok", "shopee"],
+      "description": "E-commerce platform identifier"
+    },
+    "MatchType": {
+      "type": "string",
+      "enum": ["exact_same", "variant_family", "similar", "no_match"],
+      "description": "Cross-platform matching type classification"
+    },
+    "MatchStatus": {
+      "type": "string",
+      "enum": ["auto_accepted", "needs_review", "no_match", "overridden"],
+      "description": "Matching decision status in the review workflow"
+    },
+    "OurStatus": {
+      "type": "string",
+      "enum": ["covered", "not_covered", "harvestable", "not_recommended"],
+      "description": "Our mapping status for a platform item"
+    },
+    "AlertType": {
+      "type": "string",
+      "enum": ["rank_jump", "proxy_spike", "platform_gap", "price_anomaly"],
+      "description": "Type of alert/opportunity detected"
+    },
+    "Severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Alert severity level"
+    },
+    "AlertStatus": {
+      "type": "string",
+      "enum": ["open", "acknowledged", "resolved", "dismissed"],
+      "description": "Alert lifecycle status"
+    },
+    "ProxyType": {
+      "type": "string",
+      "enum": ["rank", "sold", "sold_range", "review_count", "likes", "comments", "rating"],
+      "description": "Type of sales/popularity proxy metric"
+    },
+    "ReviewDecision": {
+      "type": "string",
+      "enum": ["accept", "reject", "change_type"],
+      "description": "Reviewer's decision on a matching pair"
+    },
+    "DQStatus": {
+      "type": "string",
+      "enum": ["passed", "failed", "degraded"],
+      "description": "Data quality gate result"
+    }
+  }
+}

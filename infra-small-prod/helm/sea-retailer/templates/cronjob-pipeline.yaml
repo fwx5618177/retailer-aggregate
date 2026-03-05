@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sea-retailer-pipeline
+  namespace: {{ .Values.global.namespace }}
+spec:
+  schedule: {{ .Values.pipeline.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: pipeline
+              image: "{{ .Values.pipeline.image.repository }}:{{ .Values.pipeline.image.tag }}"
+              command: ["python", "-m", "sea_pipeline", "run", "--config", "/etc/config/{{ .Values.pipeline.config }}"]
+              env:
+                - name: CH_URL
+                  value: jdbc:ch://clickhouse:8123/sea_retailer
+                - name: STORAGE_MODE
+                  value: prod
+              volumeMounts:
+                - name: config
+                  mountPath: /etc/config
+          volumes:
+            - name: config
+              configMap:
+                name: sea-retailer-config

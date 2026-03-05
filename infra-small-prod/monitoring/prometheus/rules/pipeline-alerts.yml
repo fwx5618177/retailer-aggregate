@@ -1,0 +1,38 @@
+groups:
+  - name: sea-retailer-pipeline
+    rules:
+      - alert: PipelineTaskFailed
+        expr: sea_pipeline_task_success_total == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pipeline task failed"
+          description: "Data pipeline has not completed successfully in the last run."
+
+      - alert: DQCheckFailed
+        expr: sea_pipeline_dq_status{status="failed"} > 0
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "Data quality check failed"
+          description: "DQ gate blocked data publication. Check {{ $labels.check_name }}."
+
+      - alert: FieldMissingRateHigh
+        expr: sea_pipeline_field_missing_rate > 0.05
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "Field missing rate above threshold"
+          description: "Field {{ $labels.field }} missing rate is {{ $value | humanizePercentage }}."
+
+      - alert: IngestionSuccessRateLow
+        expr: rate(sea_pipeline_ingestion_success_total[1h]) / rate(sea_pipeline_ingestion_total[1h]) < 0.90
+        for: 15m
+        labels:
+          severity: high
+        annotations:
+          summary: "Ingestion success rate below 90%"
+          description: "Platform {{ $labels.platform }} ingestion success rate is low."

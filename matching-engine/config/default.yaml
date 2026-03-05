@@ -1,0 +1,68 @@
+matching:
+  rule_version: "1.0.0"
+  schema_version: "1.0.0"
+
+input:
+  # Path to DuckDB or directory containing Parquet serving data
+  source: "duckdb"  # duckdb | parquet
+  duckdb_path: "../data-pipeline/data/pipeline.duckdb"
+  parquet_dir: "../data-pipeline/data/serving"
+  event_date: null  # null = latest available
+  category: "personal_care"
+
+recall:
+  strategies:
+    - brand_category
+    - text_similarity
+    # Uncomment to enable advanced recall (requires external services):
+    # - opensearch        # BM25 inverted-index recall via OpenSearch/ES
+    # - vector            # Dense vector recall via FAISS (local) or Milvus
+  top_k: 20
+  text_similarity:
+    method: "tfidf"  # tfidf | rapidfuzz_token
+    min_similarity: 0.3
+  # OpenSearch settings (used when 'opensearch' is in strategies)
+  opensearch:
+    host: "localhost"
+    port: 9200
+    index_name: "sea_matching_items"
+    min_score: 2.0
+    top_k: 50
+  # Vector recall settings (used when 'vector' is in strategies)
+  vector:
+    backend: "local"  # local (FAISS) | milvus
+    model_name: "paraphrase-multilingual-MiniLM-L12-v2"
+    top_k: 30
+    min_similarity: 0.4
+    milvus_host: "localhost"
+    milvus_port: 19530
+    collection_name: "sea_matching_vectors"
+
+filters:
+  spec_tolerance_pct: 10
+  require_same_currency: true
+
+scoring:
+  weights:
+    brand_match: 0.30
+    spec_closeness: 0.25
+    title_similarity: 0.30
+    price_band: 0.15
+  title_similarity_method: "token_sort_ratio"
+
+thresholds:
+  auto_accept: 0.85
+  needs_review: 0.65
+  # Below needs_review = no_match
+
+override:
+  overrides_path: "data/overrides/overrides.json"
+  merge_overrides: true
+
+output:
+  format: "parquet"  # parquet | duckdb
+  output_dir: "data/matching_output"
+  duckdb_path: "../data-pipeline/data/pipeline.duckdb"
+  generate_report: true
+  report_dir: "reports"
+  report_sample_size: 50

@@ -1,0 +1,52 @@
+scope:
+  platforms:
+    - shopee
+    - tiktok
+  categories:
+    - personal_care
+  sites:
+    - th
+  top_n: 200
+  window_days: 14
+
+ingestion:
+  use_stub: false
+  stub_fallback: true
+  rate_limit:
+    requests_per_second: 2
+    max_concurrent: 3
+    backoff_factor: 2.0
+    max_retries: 3
+  shopee:
+    base_url: "https://shopee.co.th/api/v4"
+    search_endpoint: "/search/search_items"
+    detail_endpoint: "/item/get"
+    timeout: 30
+  tiktok:
+    base_url: "https://www.tiktok.com/api/v1/shop"
+    search_endpoint: "/products/search"
+    detail_endpoint: "/products/detail"
+    timeout: 30
+
+standardisation:
+  brand_dictionary_path: "data/brand_dictionary.yaml"
+  unit_rules_path: "data/unit_rules.yaml"
+  spec_tolerance_pct: 10
+
+dq:
+  mode: "block"
+  topn_coverage_min: 0.95
+  field_missing_rate_max: 0.05
+  rank_uniqueness: true
+  currency_consistency: true
+  price_range:
+    min: 100
+    max: 10000000
+
+storage:
+  mode: "local"
+  duckdb_path: "data/pipeline.duckdb"
+
+export:
+  serving_dir: "data/serving"
+  format: "parquet"

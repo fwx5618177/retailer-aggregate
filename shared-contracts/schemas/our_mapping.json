@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/our_mapping.json",
+  "title": "OurMapping",
+  "description": "Our internal mapping status for a platform item",
+  "type": "object",
+  "required": ["platform", "item_id", "our_status"],
+  "properties": {
+    "platform": { "$ref": "enums.json#/$defs/Platform" },
+    "item_id": { "type": "string" },
+    "our_status": { "$ref": "enums.json#/$defs/OurStatus" },
+    "our_sku_id": { "type": ["string", "null"], "description": "Our internal SKU ID if covered" },
+    "notes": { "type": ["string", "null"], "description": "Reviewer notes or action items" },
+    "updated_by": { "type": "string", "description": "Who last updated this mapping" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "schema_version": { "type": "string" }
+  }
+}

@@ -1,0 +1,73 @@
+
+
+===== Page 1 =====
+SEA large offline retailer  FDE case (Top Selling Intelligence)  Anonymised
+Page 1
+Candidate Brief — TikTok Shop vs Shopee Top Selling Intelligence Demo
+(FDE)
+Kickoff discussion: 60 minutes. Take-home: 1–2 days. Return: 60–90 min review + live demo.
+Evaluation focus: end-to-end delivery, judgement (scope/trade-offs), and clarity of communication. We do not expect a
+production system.
+1) Business context
+- 某家东南亚大型线下零售商，300+ 门店；销售主要在线下，线上数据作为参考信号。
+- 自有在架 SKU 20k–30k；可采/可扩展 SKU 200k+；平台侧商品规模可达千万级（10M+）。
+- 目标用户：定价中心与品类团队（需要可执行的“看板 + 预警 + 机会清单”）。
+- 允许使用爬虫、第三方数据、公开信息与一切 AI 工具/搜索等方式推进（真实工作方式）。
+2) Objective
+做一个可运行的 Top Selling Intelligence demo，对比 TikTok Shop 与 Shopee
+在同一品类下的热销结构，输出可执行洞察，服务定价中心与选品决策。
+3) Fixed constraints (to ensure comparability)
+- 品类：1–2 个品类。
+- 平台：必须覆盖 Shopee + TikTok Shop。
+- 时间窗：选择 7/14/30 天之一作为主窗口，并在文档中解释选择原因。
+- Top selling 口径：允许使用 proxy（rank、sold
+count/区间、评价数、互动量等），但必须说明口径、偏差与替代方案。
+- 平台千万级规模：不要求全量实现；文档需说明上线扩展策略（候选集召回/增量更新/缓存/人审闭环）。
+4) Required deliverables (MVP)
+- Ingestion & standardisation：拉取两平台 Top selling 列表（含价格与至少一种销量/热度
+proxy），并完成标准化（brand/规格/单位/币种/口径）。
+- Cross-platform matching：TikTok item ↔ Shopee item 的同款/同类对齐，输出 match_type + confidence +
+reasons；包含阈值与 review/override 流程（demo 演示即可）。
+- Action loop (light)：对热销结果给出“我方是否覆盖/是否可采”的机会清单与下一步动作（规则/流程即可
+，不要求完美）。
+
+
+
+===== Page 2 =====
+SEA large offline retailer  FDE case (Top Selling Intelligence)  Anonymised
+Page 2
+5) Demo requirements (what to show)
+- Overview：Top N overlap、差异结构、趋势变化、价格带/促销结构对比。
+- Top items：可筛选列表（品牌/规格/价格带），展示平台、rank、price、销量/热度
+proxy、匹配结果与理由。
+- Alerts / opportunities：爆款预警（rank jump / proxy 突增）、平台差异（TikTok 强 vs Shopee
+弱等）、价格异常（同类价格带偏离）、机会清单（我方覆盖/可采/不建议 + 理由）。
+6) Optional (pick ONE, no penalty if skipped)
+- 社交媒体/趋势信号接入：用于解释爆款成因或调整预警优先级。
+- 更精细的我方映射：把我方核心 SKU 子集（500–2,000）与平台 item
+做更严格对齐，并输出更可用的建议。
+7) Submission package (3 items)
+- One design document（3–5 页，替代 slides）：范围取舍、数据口径、系统架构、matching 方法、demo
+信息架构、上线扩展方案、风险与下一步。
+- Runnable demo：Streamlit / Gradio / 简单前端均可。
+- Repo + README：如何运行、数据如何获取、哪些是 stub、使用的 AI 工具/关键验证方法（简要）。
+8) Minimal schema (schema-first)
+Table
+Key fields (examples)
+top_items
+date, platform, item_id, title, category, rank, url
+price_snapshots
+date, platform, item_id, list_price, promo_price(optional), promo_flag(optional)
+sales_proxy
+date, platform, item_id, proxy_type, proxy_value
+match_map_platform
+tiktok_item_id, shopee_item_id, match_type, confidence, reasons
+our_mapping
+item_id, our_status(covered/not_covered/harvestable), notes
+alerts
+date, item_id(s), alert_type, severity, status
+9) 60-minute kickoff discussion (agenda)
+- 0–10 min：问题复述与范围取舍（品类、时间窗、proxy 选择）。
+- 10–25 min：数据获取方案（字段口径、更新频率、失败处理）。
+- 25–45 min：matching 方案（候选集召回、置信度、解释、review/override）。
+- 45–60 min：demo 信息架构与输出动作（预警、机会清单、下一步）。

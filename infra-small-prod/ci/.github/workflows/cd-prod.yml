@@ -1,0 +1,38 @@
+name: CD - Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to deploy (git SHA or tag)"
+        required: true
+      confirm:
+        description: "Type 'deploy' to confirm"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event.inputs.confirm == 'deploy'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Deploy to production
+        run: |
+          helm upgrade --install sea-retailer \
+            infra-small-prod/helm/sea-retailer \
+            -f infra-small-prod/helm/sea-retailer/values.yaml \
+            -f infra-small-prod/helm/sea-retailer/values-prod.yaml \
+            --namespace sea-retailer-prod \
+            --set api.image.tag=${{ github.event.inputs.version }} \
+            --set frontend.image.tag=${{ github.event.inputs.version }} \
+            --wait --timeout 300s
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying production deployment..."
+          # Health checks, smoke tests

@@ -1,0 +1,80 @@
+name: CI - Shared Contracts
+
+on:
+  push:
+    paths: ["shared-contracts/**"]
+  pull_request:
+    paths: ["shared-contracts/**"]
+
+jobs:
+  breaking-change-detection:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed to compare against base branch
+
+      - name: Determine base ref
+        id: baseref
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install oasdiff
+        run: |
+          OASDIFF_VERSION="1.10.25"
+          curl -fsSL "https://github.com/Tufin/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin oasdiff
+          oasdiff --version
+
+      - name: Get base branch OpenAPI spec
+        run: |
+          mkdir -p /tmp/base-spec
+          git show ${{ steps.baseref.outputs.ref }}:shared-contracts/openapi/api-v1.yaml \
+            > /tmp/base-spec/api-v1.yaml 2>/dev/null || {
+            echo "::notice::No previous spec found at base ref; skipping breaking change check (new file)."
+            echo "SPEC_IS_NEW=true" >> "$GITHUB_ENV"
+          }
+
+      - name: Check for breaking changes
+        if: env.SPEC_IS_NEW != 'true'
+        run: |
+          echo "=== Breaking Change Detection ==="
+          echo "Comparing base (${{ steps.baseref.outputs.ref }}) -> current HEAD"
+          echo ""
+          oasdiff breaking /tmp/base-spec/api-v1.yaml shared-contracts/openapi/api-v1.yaml \
+            --fail-on ERR
+          echo ""
+          echo "No breaking changes detected."
+
+      - name: Show full changelog
+        if: env.SPEC_IS_NEW != 'true'
+        run: |
+          echo "=== Full Changelog ==="
+          oasdiff changelog /tmp/base-spec/api-v1.yaml shared-contracts/openapi/api-v1.yaml || true
+
+  lint-validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shared-contracts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Redocly CLI
+        run: npm install -g @redocly/cli
+
+      - name: Validate OpenAPI spec
+        run: redocly lint openapi/api-v1.yaml --format=github-actions
+
+      - name: Verify spec is parseable (bundle)
+        run: redocly bundle openapi/api-v1.yaml -o /dev/null

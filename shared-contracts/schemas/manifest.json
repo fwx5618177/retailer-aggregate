@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/manifest.json",
+  "title": "RunManifest",
+  "description": "Manifest for a pipeline or matching engine run",
+  "type": "object",
+  "required": ["run_id", "batch_id", "schema_version", "created_at"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "batch_id": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "rule_version": { "type": ["string", "null"] },
+    "model_version": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "sites": { "type": "array", "items": { "type": "string" } },
+        "top_n": { "type": "integer" },
+        "window_days": { "type": "integer" },
+        "event_date": { "type": "string", "format": "date" }
+      }
+    },
+    "row_counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "dq_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check_name": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "actual_value": { "type": "number" },
+          "threshold": { "type": "number" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "dq_status": { "$ref": "enums.json#/$defs/DQStatus" },
+    "duration_seconds": { "type": "number" }
+  }
+}

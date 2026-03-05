@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/price_snapshots.json",
+  "title": "PriceSnapshot",
+  "description": "Price snapshot for a platform item on a given date",
+  "type": "object",
+  "required": ["event_date", "platform", "item_id", "list_price", "currency"],
+  "properties": {
+    "event_date": { "type": "string", "format": "date" },
+    "platform": { "$ref": "enums.json#/$defs/Platform" },
+    "item_id": { "type": "string" },
+    "list_price": { "type": "integer", "minimum": 0, "description": "List price in smallest currency unit (satang for THB)" },
+    "promo_price": { "type": ["integer", "null"], "minimum": 0, "description": "Promotional price in smallest currency unit" },
+    "promo_flag": { "type": "boolean", "default": false, "description": "Whether item is currently on promotion" },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO 4217 currency code" },
+    "ingested_at": { "type": "string", "format": "date-time" },
+    "batch_id": { "type": "string" },
+    "schema_version": { "type": "string" }
+  }
+}

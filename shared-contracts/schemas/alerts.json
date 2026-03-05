@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/alerts.json",
+  "title": "Alert",
+  "description": "An alert or opportunity detected by the intelligence system",
+  "type": "object",
+  "required": ["alert_id", "event_date", "alert_type", "severity", "status"],
+  "properties": {
+    "alert_id": { "type": "string", "description": "Unique alert identifier" },
+    "event_date": { "type": "string", "format": "date" },
+    "platform": { "$ref": "enums.json#/$defs/Platform" },
+    "item_ids": { "type": "array", "items": { "type": "string" }, "description": "Related item IDs" },
+    "alert_type": { "$ref": "enums.json#/$defs/AlertType" },
+    "severity": { "$ref": "enums.json#/$defs/Severity" },
+    "status": { "$ref": "enums.json#/$defs/AlertStatus" },
+    "title": { "type": "string", "description": "Human-readable alert title" },
+    "description": { "type": "string", "description": "Detailed description of the alert" },
+    "reasons": {
+      "type": "object",
+      "properties": {
+        "trigger_metric": { "type": "string" },
+        "old_value": { "type": ["string", "number", "null"] },
+        "new_value": { "type": ["string", "number", "null"] },
+        "threshold": { "type": ["string", "number", "null"] },
+        "context": { "type": "string" }
+      }
+    },
+    "suggested_action": { "type": "string", "description": "Recommended next step" },
+    "batch_id": { "type": "string" },
+    "schema_version": { "type": "string" }
+  }
+}

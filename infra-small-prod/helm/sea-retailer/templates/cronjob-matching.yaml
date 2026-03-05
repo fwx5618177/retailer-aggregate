@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sea-retailer-matching
+  namespace: {{ .Values.global.namespace }}
+spec:
+  schedule: {{ .Values.matching.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: matching
+              image: "{{ .Values.matching.image.repository }}:{{ .Values.matching.image.tag }}"
+              command: ["python", "-m", "sea_matching", "run", "--config", "/etc/config/{{ .Values.matching.config }}"]
+              env:
+                - name: CH_URL
+                  value: jdbc:ch://clickhouse:8123/sea_retailer
+              volumeMounts:
+                - name: config
+                  mountPath: /etc/config
+          volumes:
+            - name: config
+              configMap:
+                name: sea-retailer-config

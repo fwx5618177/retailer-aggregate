@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/reasons.json",
+  "title": "MatchReasons",
+  "description": "Structured reasons for a matching decision",
+  "type": "object",
+  "properties": {
+    "strong_evidence": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key evidence supporting the match"
+    },
+    "weak_evidence": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Supporting but inconclusive evidence"
+    },
+    "field_alignment": {
+      "type": "object",
+      "properties": {
+        "brand_match": { "type": "boolean" },
+        "brand_a": { "type": ["string", "null"] },
+        "brand_b": { "type": ["string", "null"] },
+        "spec_match": { "type": "boolean" },
+        "spec_a": { "type": ["string", "null"] },
+        "spec_b": { "type": ["string", "null"] },
+        "title_similarity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "price_band_match": { "type": "boolean" }
+      }
+    },
+    "missing_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Fields that were missing and could not be compared"
+    }
+  }
+}

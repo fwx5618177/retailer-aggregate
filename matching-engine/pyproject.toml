@@ -1,0 +1,38 @@
+[project]
+name = "sea-matching"
+version = "0.1.0"
+description = "Cross-platform matching engine for SEA Retailer Top Selling Intelligence"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.0.0",
+    "rapidfuzz>=3.9.0",
+    "scikit-learn>=1.5.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "click>=8.0",
+    "pyarrow>=17.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+sea-matching = "sea_matching.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sea_matching"]
+
+[tool.ruff]
+src = ["src", "tests"]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

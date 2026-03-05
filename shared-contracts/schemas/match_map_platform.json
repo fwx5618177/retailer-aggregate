@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sea-retailer.com/schemas/match_map_platform.json",
+  "title": "MatchMapPlatform",
+  "description": "Cross-platform matching result between TikTok and Shopee items",
+  "type": "object",
+  "required": ["tiktok_item_id", "shopee_item_id", "match_type", "confidence", "status"],
+  "properties": {
+    "tiktok_item_id": { "type": "string" },
+    "shopee_item_id": { "type": "string" },
+    "match_type": { "$ref": "enums.json#/$defs/MatchType" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Matching confidence score" },
+    "status": { "$ref": "enums.json#/$defs/MatchStatus" },
+    "reasons": { "$ref": "reasons.json" },
+    "rule_version": { "type": "string", "description": "Version of the matching rules used" },
+    "model_version": { "type": ["string", "null"], "description": "Version of the ML model (if used)" },
+    "ingested_at": { "type": "string", "format": "date-time" },
+    "batch_id": { "type": "string" },
+    "schema_version": { "type": "string" }
+  }
+}

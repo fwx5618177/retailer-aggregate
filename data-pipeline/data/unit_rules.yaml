@@ -1,0 +1,20 @@
+conversions:
+  volume:
+    l: { to: ml, factor: 1000 }
+    liter: { to: ml, factor: 1000 }
+    litre: { to: ml, factor: 1000 }
+    oz: { to: ml, factor: 29.5735 }
+    fl_oz: { to: ml, factor: 29.5735 }
+    gallon: { to: ml, factor: 3785.41 }
+  weight:
+    kg: { to: g, factor: 1000 }
+    lb: { to: g, factor: 453.592 }
+    oz_weight: { to: g, factor: 28.3495 }
+  count:
+    pack: { to: pcs, factor: 1 }
+    box: { to: pcs, factor: 1 }
+    set: { to: pcs, factor: 1 }
+base_units:
+  volume: ml
+  weight: g
+  count: pcs

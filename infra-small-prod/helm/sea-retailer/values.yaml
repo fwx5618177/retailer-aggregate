@@ -1,0 +1,67 @@
+global:
+  namespace: sea-retailer
+  environment: staging
+
+api:
+  replicas: 1
+  image:
+    repository: ghcr.io/sea-retailer/api-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  env:
+    SPRING_PROFILES_ACTIVE: prod
+    POSTGRES_USER: sea_retailer
+    CH_USER: default
+
+frontend:
+  replicas: 1
+  image:
+    repository: ghcr.io/sea-retailer/web-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+pipeline:
+  schedule: "0 6 * * *"  # Daily at 6 AM UTC
+  image:
+    repository: ghcr.io/sea-retailer/data-pipeline
+    tag: latest
+  config: default.yaml
+
+matching:
+  schedule: "30 6 * * *"  # Daily at 6:30 AM UTC (after pipeline)
+  image:
+    repository: ghcr.io/sea-retailer/matching-engine
+    tag: latest
+  config: default.yaml
+
+ingress:
+  enabled: true
+  className: nginx
+  host: sea-retailer.example.com
+  tls: true
+
+secrets:
+  postgresPassword: ""  # Set via --set or sealed secrets
+  clickhousePassword: ""
+  keycloakAdminPassword: ""
+
+sealedSecrets:
+  enabled: false  # Set to true to use Bitnami Sealed Secrets instead of plain secrets
+  postgresPassword: ""      # kubeseal-encrypted value
+  clickhousePassword: ""    # kubeseal-encrypted value
+  keycloakAdminPassword: "" # kubeseal-encrypted value
+  jwtSigningKey: ""         # kubeseal-encrypted value

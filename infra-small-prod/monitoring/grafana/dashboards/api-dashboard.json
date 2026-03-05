@@ -1,0 +1,33 @@
+{
+  "dashboard": {
+    "title": "SEA Retailer - API Metrics",
+    "uid": "sea-api",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "timeseries",
+        "targets": [{"expr": "rate(http_server_requests_seconds_count{application='sea-retailer-api'}[5m])", "legendFormat": "{{uri}}"}]
+      },
+      {
+        "title": "P95 Latency",
+        "type": "timeseries",
+        "targets": [{"expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application='sea-retailer-api'}[5m]))", "legendFormat": "{{uri}}"}]
+      },
+      {
+        "title": "Error Rate",
+        "type": "gauge",
+        "targets": [{"expr": "rate(http_server_requests_seconds_count{application='sea-retailer-api',status=~'5..'}[5m]) / rate(http_server_requests_seconds_count{application='sea-retailer-api'}[5m])"}]
+      },
+      {
+        "title": "Review Decisions / Hour",
+        "type": "stat",
+        "targets": [{"expr": "rate(sea_retailer_review_decisions_total[1h]) * 3600"}]
+      },
+      {
+        "title": "Active Connections",
+        "type": "timeseries",
+        "targets": [{"expr": "hikaricp_connections_active{application='sea-retailer-api'}"}]
+      }
+    ]
+  }
+}
